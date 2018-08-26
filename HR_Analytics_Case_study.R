@@ -408,7 +408,7 @@ grid.arrange(p10,p11,p12, ncol=3)
 ggpairs(HR_data[, c("MonthlyIncome", "NumCompaniesWorked", "PercentSalaryHike", "YearsAtCompany" , "YearsSinceLastPromotion" ,  "YearsWithCurrManager")])
 
 
-#YearsAtCompany and YearsSinceLastPromotion are highly corelated : 0.618
+#YearsAtCompany and YearsWithCurrManager are highly corelated : 0.834
 
 ################################################################
 ### Data Preparation
@@ -493,7 +493,7 @@ dummies<- data.frame(sapply(Hr_data_chr,
 
 # Final dataset
 HR_data_final<- cbind(HR_data[,-c(4,5,7,8,10,11,12,16,22,23,24,25,26)],dummies) 
-View(HR_data_final) #7032 obs. of  31 variables
+View(HR_data_final) #4410 obs. of  59 variables
 write.csv(HR_data_final,"HR_data_final.csv")
 
 ########################################################################
@@ -506,6 +506,10 @@ train = HR_data_final[indices,]
 
 test = HR_data_final[!(indices),]
 
+# Removing EmployeeID columns from train & test datasets as it is unique and is similar to row number.
+
+train <- train[-1]
+test <- test[-1]
 ########################################################################
 # Logistic Regression: 
 
@@ -527,345 +531,391 @@ summary(model_2)
 library(car)
 vif(model_2)
 
-#Excluding JobSatisfaction.xMedium
+#Model parameters obtained from StepAIC function
 
-model_3 <- glm(formula = Attrition ~ Age + DistanceFromHome + MonthlyIncome + 
-                 NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                 YearsAtCompany + YearsSinceLastPromotion + YearsWithCurrManager + 
-                 Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                 BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                 Department.xSales + Education.xBelow.College + Education.xCollege + 
-                 EducationField.xMarketing + EducationField.xOther + JobLevel.x2 + 
-                 JobRole.xLaboratory.Technician + JobRole.xResearch.Director + 
-                 JobRole.xResearch.Scientist + JobRole.xSales.Executive + 
-                 MaritalStatus.xSingle + StockOptionLevel.x1 + EnvironmentSatisfaction.xLow + 
-                 EnvironmentSatisfaction.xVery.High + JobSatisfaction.xLow + 
-                 JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
-                 WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
+model_3 <- glm(formula = Attrition ~ Age + DistanceFromHome + Gender + NumCompaniesWorked + 
+                 TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                 YearsWithCurrManager + Average_time_spent + Total_days_worked + 
+                 BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                 Department.xResearch...Development + Department.xSales + 
+                 Education.xBelow.College + Education.xCollege + EducationField.xLife.Sciences + 
+                 EducationField.xMarketing + EducationField.xMedical + EducationField.xOther + 
+                 EducationField.xTechnical.Degree + JobLevel.x2 + JobRole.xLaboratory.Technician + 
+                 JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                 JobRole.xSales.Executive + MaritalStatus.xMarried + MaritalStatus.xSingle + 
+                 StockOptionLevel.x1 + EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                 JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                 WorkLifeBalance.xBetter + WorkLifeBalance.xGood + JobInvolvement.xLow + 
+                 JobInvolvement.xVery.High, family = "binomial", 
                data = train)
 
 summary(model_3)
 vif(model_3)
 
-#Excluding EducationField.xMarketing because of high P value
-
-model_4 <- glm(formula = Attrition ~ Age + DistanceFromHome + MonthlyIncome + 
-                 NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                 YearsAtCompany + YearsSinceLastPromotion + YearsWithCurrManager + 
-                 Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                 BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                 Department.xSales + Education.xBelow.College + Education.xCollege + 
-                 EducationField.xOther + JobLevel.x2 + 
-                 JobRole.xLaboratory.Technician + JobRole.xResearch.Director + 
-                 JobRole.xResearch.Scientist + JobRole.xSales.Executive + 
-                 MaritalStatus.xSingle + StockOptionLevel.x1 + EnvironmentSatisfaction.xLow + 
-                 EnvironmentSatisfaction.xVery.High + JobSatisfaction.xLow + 
-                 JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
-                 WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
+# Removing MaritalStatus.xMarried due to high p-value to get model_4.
+model_4 <- glm(formula = Attrition ~ Age + DistanceFromHome + Gender + NumCompaniesWorked + 
+                 TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                 YearsWithCurrManager + Average_time_spent + Total_days_worked + 
+                 BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                 Department.xResearch...Development + Department.xSales + 
+                 Education.xBelow.College + Education.xCollege + EducationField.xLife.Sciences + 
+                 EducationField.xMarketing + EducationField.xMedical + EducationField.xOther + 
+                 EducationField.xTechnical.Degree + JobLevel.x2 + JobRole.xLaboratory.Technician + 
+                 JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                 JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                 StockOptionLevel.x1 + EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                 JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                 WorkLifeBalance.xBetter + WorkLifeBalance.xGood + JobInvolvement.xLow + 
+                 JobInvolvement.xVery.High, family = "binomial", 
                data = train)
 
 summary(model_4)
 vif(model_4)
 
-#Excluding Education.xBelow.College because of High P value
-
-model_5 <- glm(formula = Attrition ~ Age + DistanceFromHome + MonthlyIncome + 
-                NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                YearsAtCompany + YearsSinceLastPromotion + YearsWithCurrManager + 
-                Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                Department.xSales + Education.xCollege + 
-                EducationField.xOther + JobLevel.x2 + 
-                JobRole.xLaboratory.Technician + JobRole.xResearch.Director + 
-                JobRole.xResearch.Scientist + JobRole.xSales.Executive + 
-                MaritalStatus.xSingle + StockOptionLevel.x1 + EnvironmentSatisfaction.xLow + 
-                EnvironmentSatisfaction.xVery.High + JobSatisfaction.xLow + 
-                JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
-                WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
-              data = train)
+# Removing EducationField.xLife.Sciences due to high p value to get model_5
+model_5 <- glm(formula = Attrition ~ Age + DistanceFromHome + Gender + NumCompaniesWorked + 
+                 TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                 YearsWithCurrManager + Average_time_spent + Total_days_worked + 
+                 BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                 Department.xResearch...Development + Department.xSales + 
+                 Education.xBelow.College + Education.xCollege +  
+                 EducationField.xMarketing + EducationField.xMedical + EducationField.xOther + 
+                 EducationField.xTechnical.Degree + JobLevel.x2 + JobRole.xLaboratory.Technician + 
+                 JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                 JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                 StockOptionLevel.x1 + EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                 JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                 WorkLifeBalance.xBetter + WorkLifeBalance.xGood + JobInvolvement.xLow + 
+                 JobInvolvement.xVery.High, family = "binomial", 
+               data = train)
 
 summary(model_5)
 vif(model_5)
 
-##Excluding DistanceFromHome because of High P value
-
-model_6 <- glm(formula = Attrition ~ Age + MonthlyIncome + 
-                NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                YearsAtCompany + YearsSinceLastPromotion + YearsWithCurrManager + 
-                Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                Department.xSales + Education.xCollege + 
-                EducationField.xOther + JobLevel.x2 + 
-                JobRole.xLaboratory.Technician + JobRole.xResearch.Director + 
-                JobRole.xResearch.Scientist + JobRole.xSales.Executive + 
-                MaritalStatus.xSingle + StockOptionLevel.x1 + EnvironmentSatisfaction.xLow + 
-                EnvironmentSatisfaction.xVery.High + JobSatisfaction.xLow + 
-                JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
-                WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
-              data = train)
+# Removing EducationField.xMedical due to high p value to get model_6
+model_6 <- glm(formula = Attrition ~ Age + DistanceFromHome + Gender + NumCompaniesWorked + 
+                 TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                 YearsWithCurrManager + Average_time_spent + Total_days_worked + 
+                 BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                 Department.xResearch...Development + Department.xSales + 
+                 Education.xBelow.College + Education.xCollege +  
+                 EducationField.xMarketing + EducationField.xOther + 
+                 EducationField.xTechnical.Degree + JobLevel.x2 + JobRole.xLaboratory.Technician + 
+                 JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                 JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                 StockOptionLevel.x1 + EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                 JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                 WorkLifeBalance.xBetter + WorkLifeBalance.xGood + JobInvolvement.xLow + 
+                 JobInvolvement.xVery.High, family = "binomial", 
+               data = train)
 
 summary(model_6)
 vif(model_6)
 
-##Excluding EducationField.xOther because of High P value
-
-model_7 <- glm(formula = Attrition ~ Age + MonthlyIncome + 
-                 NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                 YearsAtCompany + YearsSinceLastPromotion + YearsWithCurrManager + 
-                 Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                 BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                 Department.xSales + Education.xCollege + 
-                 JobLevel.x2 + 
-                 JobRole.xLaboratory.Technician + JobRole.xResearch.Director + 
-                 JobRole.xResearch.Scientist + JobRole.xSales.Executive + 
-                 MaritalStatus.xSingle + StockOptionLevel.x1 + EnvironmentSatisfaction.xLow + 
-                 EnvironmentSatisfaction.xVery.High + JobSatisfaction.xLow + 
-                 JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
-                 WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
+# Removing the Gender variable due to high p value to get model_7
+model_7 <- glm(formula = Attrition ~ Age + DistanceFromHome + NumCompaniesWorked + 
+                 TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                 YearsWithCurrManager + Average_time_spent + Total_days_worked + 
+                 BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                 Department.xResearch...Development + Department.xSales + 
+                 Education.xBelow.College + Education.xCollege +  
+                 EducationField.xMarketing + EducationField.xOther + 
+                 EducationField.xTechnical.Degree + JobLevel.x2 + JobRole.xLaboratory.Technician + 
+                 JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                 JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                 StockOptionLevel.x1 + EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                 JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                 WorkLifeBalance.xBetter + WorkLifeBalance.xGood + JobInvolvement.xLow + 
+                 JobInvolvement.xVery.High, family = "binomial", 
                data = train)
 
 summary(model_7)
 vif(model_7)
 
-##Excluding StockOptionLevel.x1 because of High P value
+# Removing EducationField.xMarketing due to high p value to get model_8
 
-model_8 <- glm(formula = Attrition ~ Age + MonthlyIncome + 
-                 NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                 YearsAtCompany + YearsSinceLastPromotion + YearsWithCurrManager + 
-                 Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                 BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                 Department.xSales + Education.xCollege + 
-                 JobLevel.x2 + 
-                 JobRole.xLaboratory.Technician + JobRole.xResearch.Director + 
-                 JobRole.xResearch.Scientist + JobRole.xSales.Executive + 
-                 MaritalStatus.xSingle + EnvironmentSatisfaction.xLow + 
-                 EnvironmentSatisfaction.xVery.High + JobSatisfaction.xLow + 
-                 JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
-                 WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
+model_8 <- glm(formula = Attrition ~ Age + DistanceFromHome + NumCompaniesWorked + 
+                 TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                 YearsWithCurrManager + Average_time_spent + Total_days_worked + 
+                 BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                 Department.xResearch...Development + Department.xSales + 
+                 Education.xBelow.College + Education.xCollege + EducationField.xOther + 
+                 EducationField.xTechnical.Degree + JobLevel.x2 + JobRole.xLaboratory.Technician + 
+                 JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                 JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                 StockOptionLevel.x1 + EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                 JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                 WorkLifeBalance.xBetter + WorkLifeBalance.xGood + JobInvolvement.xLow + 
+                 JobInvolvement.xVery.High, family = "binomial", 
                data = train)
 
 summary(model_8)
 vif(model_8)
 
-##Excluding MonthlyIncome because of High P value
+# Removing EducationField.xTechnical.Degree due to high p value to get model_9
 
-model_9 <- glm(formula = Attrition ~ Age + 
-                 NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                 YearsAtCompany + YearsSinceLastPromotion + YearsWithCurrManager + 
-                 Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                 BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                 Department.xSales + Education.xCollege + 
-                 JobLevel.x2 + 
-                 JobRole.xLaboratory.Technician + JobRole.xResearch.Director + 
-                 JobRole.xResearch.Scientist + JobRole.xSales.Executive + 
-                 MaritalStatus.xSingle + EnvironmentSatisfaction.xLow + 
-                 EnvironmentSatisfaction.xVery.High + JobSatisfaction.xLow + 
-                 JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
-                 WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
+model_9 <- glm(formula = Attrition ~ Age + DistanceFromHome + NumCompaniesWorked + 
+                 TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                 YearsWithCurrManager + Average_time_spent + Total_days_worked + 
+                 BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                 Department.xResearch...Development + Department.xSales + 
+                 Education.xBelow.College + Education.xCollege + EducationField.xOther + 
+                 JobLevel.x2 + JobRole.xLaboratory.Technician + 
+                 JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                 JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                 StockOptionLevel.x1 + EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                 JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                 WorkLifeBalance.xBetter + WorkLifeBalance.xGood + JobInvolvement.xLow + 
+                 JobInvolvement.xVery.High, family = "binomial", 
                data = train)
 
 summary(model_9)
 vif(model_9)
 
-##Excluding YearsAtCompany because of High P value and pretty high VIF 4.858480
-
-model_10 <- glm(formula = Attrition ~ Age + 
-                 NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                 YearsSinceLastPromotion + YearsWithCurrManager + 
-                 Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                 BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                 Department.xSales + Education.xCollege + 
-                 JobLevel.x2 + 
-                 JobRole.xLaboratory.Technician + JobRole.xResearch.Director + 
-                 JobRole.xResearch.Scientist + JobRole.xSales.Executive + 
-                 MaritalStatus.xSingle + EnvironmentSatisfaction.xLow + 
-                 EnvironmentSatisfaction.xVery.High + JobSatisfaction.xLow + 
-                 JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
-                 WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
+# Removing Education.xBelow.College due to high p value to get model_10
+model_10 <- glm(formula = Attrition ~ Age + DistanceFromHome + NumCompaniesWorked + 
+                 TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                 YearsWithCurrManager + Average_time_spent + Total_days_worked + 
+                 BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                 Department.xResearch...Development + Department.xSales + 
+                 Education.xCollege + EducationField.xOther + 
+                 JobLevel.x2 + JobRole.xLaboratory.Technician + 
+                 JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                 JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                 StockOptionLevel.x1 + EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                 JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                 WorkLifeBalance.xBetter + WorkLifeBalance.xGood + JobInvolvement.xLow + 
+                 JobInvolvement.xVery.High, family = "binomial", 
                data = train)
 
 summary(model_10)
 vif(model_10)
 
-##Excluding Education.xCollege because of High P value
+# Removing Education.xCollege due to high p value to get model_11
 
-model_11 <- glm(formula = Attrition ~ Age + 
-                  NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                  YearsSinceLastPromotion + YearsWithCurrManager + 
-                  Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                  BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                  Department.xSales + JobLevel.x2 + 
-                  JobRole.xLaboratory.Technician + JobRole.xResearch.Director + 
-                  JobRole.xResearch.Scientist + JobRole.xSales.Executive + 
-                  MaritalStatus.xSingle + EnvironmentSatisfaction.xLow + 
-                  EnvironmentSatisfaction.xVery.High + JobSatisfaction.xLow + 
-                  JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
-                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
+model_11 <- glm(formula = Attrition ~ Age + DistanceFromHome + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Average_time_spent + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                  Department.xResearch...Development + Department.xSales + 
+                  EducationField.xOther + 
+                  JobLevel.x2 + JobRole.xLaboratory.Technician + 
+                  JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                  JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                  StockOptionLevel.x1 + EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                  JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood + JobInvolvement.xLow + 
+                  JobInvolvement.xVery.High, family = "binomial", 
                 data = train)
 
 summary(model_11)
 vif(model_11)
 
-##Excluding EnvironmentSatisfaction.xVery.High because of High P value
-
-model_12 <- glm(formula = Attrition ~ Age + 
-                  NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                  YearsSinceLastPromotion + YearsWithCurrManager + 
-                  Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                  BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                  Department.xSales + JobLevel.x2 + 
-                  JobRole.xLaboratory.Technician + JobRole.xResearch.Director + 
-                  JobRole.xResearch.Scientist + JobRole.xSales.Executive + 
-                  MaritalStatus.xSingle + EnvironmentSatisfaction.xLow + 
-                  JobSatisfaction.xLow + 
-                  JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
-                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
+# Removing EducationField.xOther due to high p value to get model_12
+model_12 <- glm(formula = Attrition ~ Age + DistanceFromHome + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Average_time_spent + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                  Department.xResearch...Development + Department.xSales + 
+                  JobLevel.x2 + JobRole.xLaboratory.Technician + 
+                  JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                  JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                  StockOptionLevel.x1 + EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                  JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood + JobInvolvement.xLow + 
+                  JobInvolvement.xVery.High, family = "binomial", 
                 data = train)
 
 summary(model_12)
 vif(model_12)
 
-##Excluding JobRole.xLaboratory.Technician because of High P value
-
-model_13 <- glm(formula = Attrition ~ Age + 
-                  NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                  YearsSinceLastPromotion + YearsWithCurrManager + 
-                  Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                  BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                  Department.xSales + JobLevel.x2 + 
-                  JobRole.xResearch.Director + 
-                  JobRole.xResearch.Scientist + JobRole.xSales.Executive + 
-                  MaritalStatus.xSingle + EnvironmentSatisfaction.xLow + 
-                  JobSatisfaction.xLow + 
-                  JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
-                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
+# Removing StockOptionLevel.x1 due to high p value to get model_13
+model_13 <- glm(formula = Attrition ~ Age + DistanceFromHome + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Average_time_spent + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                  Department.xResearch...Development + Department.xSales + 
+                  JobLevel.x2 + JobRole.xLaboratory.Technician + 
+                  JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                  JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                  JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood + JobInvolvement.xLow + 
+                  JobInvolvement.xVery.High, family = "binomial", 
                 data = train)
 
 summary(model_13)
 vif(model_13)
 
-##Excluding JobRole.xResearch.Scientist because of High P value
-
-model_14 <- glm(formula = Attrition ~ Age + 
-                  NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                  YearsSinceLastPromotion + YearsWithCurrManager + 
-                  Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                  BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                  Department.xSales + JobLevel.x2 + 
-                  JobRole.xResearch.Director + 
-                  JobRole.xSales.Executive + 
-                  MaritalStatus.xSingle + EnvironmentSatisfaction.xLow + 
-                  JobSatisfaction.xLow + 
-                  JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
-                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
+# Removing DistanceFromHome due to high p value to get model_14
+model_14 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Average_time_spent + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                  Department.xResearch...Development + Department.xSales + 
+                  JobLevel.x2 + JobRole.xLaboratory.Technician + 
+                  JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                  JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                  JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood + JobInvolvement.xLow + 
+                  JobInvolvement.xVery.High, family = "binomial", 
                 data = train)
 
 summary(model_14)
 vif(model_14)
 
-##Excluding JobLevel.x2 because of High P value
-
-model_15 <- glm(formula = Attrition ~ Age + 
-                  NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                  YearsSinceLastPromotion + YearsWithCurrManager + 
-                  Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                  BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                  Department.xSales +
-                  JobRole.xResearch.Director + 
-                  JobRole.xSales.Executive + 
-                  MaritalStatus.xSingle + EnvironmentSatisfaction.xLow + 
-                  JobSatisfaction.xLow + 
-                  JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
-                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
-                data = train)
+# Removing JobInvolvement.xVery.High due to high p value to get model_15
+model_15 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Average_time_spent + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                  Department.xResearch...Development + Department.xSales + 
+                  JobLevel.x2 + JobRole.xLaboratory.Technician + 
+                  JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                  JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                  JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood + JobInvolvement.xLow 
+                  , family = "binomial", data = train)
 
 summary(model_15)
 vif(model_15)
 
-##Excluding JobRole.xResearch.Director because of High P value
+# Removing JobRole.xLaboratory.Technician due to relatively high p value to get model_16
 
-model_16 <- glm(formula = Attrition ~ Age + 
-                  NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                  YearsSinceLastPromotion + YearsWithCurrManager + 
-                  Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                  BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                  Department.xSales +
-                  JobRole.xSales.Executive + 
-                  MaritalStatus.xSingle + EnvironmentSatisfaction.xLow + 
-                  JobSatisfaction.xLow + 
-                  JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
-                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
-                data = train)
+model_16 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Average_time_spent + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                  Department.xResearch...Development + Department.xSales + 
+                  JobLevel.x2 + JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                  JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                  JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood + JobInvolvement.xLow 
+                , family = "binomial", data = train)
 
 summary(model_16)
 vif(model_16)
 
-##Excluding JobRole.xSales.Executive because of High P value
+# Removing Average_time_spent due to relatively low p value and high vif to get model_17
 
-model_17 <- glm(formula = Attrition ~ Age + 
-                  NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                  YearsSinceLastPromotion + YearsWithCurrManager + 
-                  Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                  BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                  Department.xSales + 
-                  MaritalStatus.xSingle + EnvironmentSatisfaction.xLow + 
-                  JobSatisfaction.xLow + 
-                  JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
-                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
-                data = train)
+model_17 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                  Department.xResearch...Development + Department.xSales + 
+                  JobLevel.x2 + JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                  JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                  JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood + JobInvolvement.xLow 
+                , family = "binomial", data = train)
 
 summary(model_17)
 vif(model_17)
 
-##Excluding WorkLifeBalance.xBest because of High P value
+# Removing JobInvolvement.xLow due to high p value to get model_18
 
-model_18 <- glm(formula = Attrition ~ Age + 
-                  NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                  YearsSinceLastPromotion + YearsWithCurrManager + 
-                  Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                  BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                  Department.xSales + 
-                  MaritalStatus.xSingle + EnvironmentSatisfaction.xLow + 
-                  JobSatisfaction.xLow + 
-                  JobSatisfaction.xVery.High + 
-                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood, family = "binomial", 
-                data = train)
+model_18 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                  Department.xResearch...Development + Department.xSales + 
+                  JobLevel.x2 + JobRole.xResearch.Director + JobRole.xResearch.Scientist + 
+                  JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                  JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood , family = "binomial", data = train)
 
 summary(model_18)
 vif(model_18)
 
-##Excluding WorkLifeBalance.xGood because of High P value
 
-model_19 <- glm(formula = Attrition ~ Age + 
-                  NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                  YearsSinceLastPromotion + YearsWithCurrManager + 
-                  Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                  BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                  Department.xSales + 
-                  MaritalStatus.xSingle + EnvironmentSatisfaction.xLow + 
-                  JobSatisfaction.xLow + 
-                  JobSatisfaction.xVery.High + 
-                  WorkLifeBalance.xBetter, family = "binomial", 
-                data = train)
+# Removing JobRole.xResearch.Scientist due to relatively high p value to get model_19
+model_19 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                  Department.xResearch...Development + Department.xSales + 
+                  JobLevel.x2 + JobRole.xResearch.Director + 
+                  JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + EnvironmentSatisfaction.xVery.High + 
+                  JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood , family = "binomial", data = train)
 
 summary(model_19)
 vif(model_19)
 
-##Excluding WorkLifeBalance.xBetter because of High P value
+# Removing EnvironmentSatisfaction.xVery.High due to relatively high p value to get model_20
 
-model_20 <- glm(formula = Attrition ~ Age + 
-                  NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
-                  YearsSinceLastPromotion + YearsWithCurrManager + 
-                  Average_time_spent + BusinessTravel.xTravel_Frequently + 
-                  BusinessTravel.xTravel_Rarely + Department.xResearch...Development + 
-                  Department.xSales + 
-                  MaritalStatus.xSingle + EnvironmentSatisfaction.xLow + 
-                  JobSatisfaction.xLow + 
-                  JobSatisfaction.xVery.High, family = "binomial", 
-                data = train)
+model_20 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                  Department.xResearch...Development + Department.xSales + 
+                  JobLevel.x2 + JobRole.xResearch.Director + 
+                  JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood , family = "binomial", data = train)
 
 summary(model_20)
 vif(model_20)
+
+# Removing JobLevel.x2 due to relatively high p value to get model_21
+model_21 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                  Department.xResearch...Development + Department.xSales + 
+                  JobRole.xResearch.Director + 
+                  JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood , family = "binomial", data = train)
+
+summary(model_21)
+vif(model_21)
+
+# Removing JobRole.xResearch.Director due to relatively high p value to get model_22
+model_22 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                  Department.xResearch...Development + Department.xSales + 
+                  JobRole.xSales.Executive + MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood , family = "binomial", data = train)
+
+summary(model_22)
+vif(model_22)
+
+# Removing JobRole.xSales.Executive due to relatively high p value to get model_23
+model_23 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + BusinessTravel.xTravel_Rarely + 
+                  Department.xResearch...Development + Department.xSales + 
+                  MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood , family = "binomial", data = train)
+
+summary(model_23)
+vif(model_23)
+
+# Removing BusinessTravel.xTravel_Rarely due to high vif to get model_24
+model_24 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + Department.xResearch...Development + Department.xSales + 
+                  MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + JobSatisfaction.xLow + JobSatisfaction.xVery.High + WorkLifeBalance.xBest + 
+                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood , family = "binomial", data = train)
+
+summary(model_24)
+vif(model_24)
+
+
 
 #Can't remove BusinessTravel.xTravel_Frequently or BusinessTravel.xTravel_Rarely even though it has 
 #high VIF value since they both have very high negative corelation -0.753091732
