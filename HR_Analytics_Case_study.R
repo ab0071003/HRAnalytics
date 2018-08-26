@@ -366,9 +366,47 @@ p12 <- ggplot(HR_data, aes(x=Attrition,y=YearsWithCurrManager,fill=Attrition))+ 
 
 grid.arrange(p10,p11,p12, ncol=3)
 
+# Outlier Treatment using boxplot.stats function
+out <- boxplot.stats(HR_data$MonthlyIncome)
+out
+out$stats[5] # Cutoff value for Outlier Treatment
+HR_data$MonthlyIncome[which(HR_data$MonthlyIncome > out$stats[5])] <- out$stats[5]
+
+out <- boxplot.stats(HR_data$YearsAtCompany)
+out
+out$stats[5] # Cutoff value for Outlier Treatment
+HR_data$YearsAtCompany[which(HR_data$YearsAtCompany > out$stats[5])] <- out$stats[5]
+
+out <- boxplot.stats(HR_data$YearsSinceLastPromotion)
+out
+out$stats[5] # Cutoff value for Outlier Treatment
+HR_data$YearsSinceLastPromotion[which(HR_data$YearsSinceLastPromotion > out$stats[5])] <- out$stats[5]
+
+out <- boxplot.stats(HR_data$YearsWithCurrManager)
+out
+out$stats[5] # Cutoff value for Outlier Treatment
+HR_data$YearsWithCurrManager[which(HR_data$YearsWithCurrManager > out$stats[5])] <- out$stats[5]
+
+# Boxplots after outlier treatment
+
+p7 <- ggplot(HR_data, aes(x=Attrition,y=MonthlyIncome,fill=Attrition))+ geom_boxplot(width=0.1) +xlab("Attrition")+ylab("Monthly Income") + ggtitle("Attrition & Monthly Income")+theme(plot.title = element_text(hjust = 0.5)) + theme_economist()
+p8 <- ggplot(HR_data, aes(x=Attrition,y=NumCompaniesWorked,fill=Attrition))+ geom_boxplot(width=0.1) +xlab("Attrition")+ylab("No. of Companies Worked") + ggtitle("Attrition & No. of Companies")+theme(plot.title = element_text(hjust = 0.5)) + theme_economist()
+p9 <- ggplot(HR_data, aes(x=Attrition,y=PercentSalaryHike,fill=Attrition))+ geom_boxplot(width=0.1) +xlab("Attrition")+ylab("Percent Salary Hike") + ggtitle("Attrition & Percentage of Salary Hike")+theme(plot.title = element_text(hjust = 0.5)) + theme_economist()
+
+grid.arrange(p7,p8,p9, ncol=3)
+
+p10 <- ggplot(HR_data, aes(x=Attrition,y=YearsAtCompany,fill=Attrition))+ geom_boxplot(width=0.1) +xlab("Attrition")+ylab("Years at Company") + ggtitle("Attrition & Years at Company")+theme(plot.title = element_text(hjust = 0.5)) + theme_economist()
+p11 <- ggplot(HR_data, aes(x=Attrition,y=YearsSinceLastPromotion,fill=Attrition))+ geom_boxplot(width=0.1) +xlab("Attrition")+ylab("Years since Last Promotion") + ggtitle("Attrition & Years since Last Promotion")+theme(plot.title = element_text(hjust = 0.5)) + theme_economist()
+p12 <- ggplot(HR_data, aes(x=Attrition,y=YearsWithCurrManager,fill=Attrition))+ geom_boxplot(width=0.1) +xlab("Attrition")+ylab("Years with Current Manager") + ggtitle("Attrition & Years with Current Manager")+theme(plot.title = element_text(hjust = 0.5)) + theme_economist()
+
+grid.arrange(p10,p11,p12, ncol=3)
+
+
+
 # Correlation between numeric variables
 
 ggpairs(HR_data[, c("MonthlyIncome", "NumCompaniesWorked", "PercentSalaryHike", "YearsAtCompany" , "YearsSinceLastPromotion" ,  "YearsWithCurrManager")])
+
 
 #YearsAtCompany and YearsSinceLastPromotion are highly corelated : 0.618
 
