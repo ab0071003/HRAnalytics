@@ -1116,5 +1116,6 @@ gain_lift_evaluation<- function(labels,predicted_prob,groups=10)
 Attrition_gainlift = gain_lift_evaluation(test_actual_attrition, test_pred, groups = 10)
 Attrition_gainlift
 
-#From the Attrition_gainlift table it is clear that within 40% of the test dataset [or within the 4th decile].
+ggplot(Attrition_gainlift,aes(x=bucket, y=Gain)) + geom_point() + geom_line() + xlab("Decile") + ylab("Gain (%)") + ggtitle("Gain Chart") + theme_economist()
+#From the Attrition_gainlift table it is clear that within 40% of the test dataset [or in the 4th decile], around 80% of the attrition values are covered.
 #This is a good model considering practical implications.
