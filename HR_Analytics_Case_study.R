@@ -915,15 +915,90 @@ model_24 <- glm(formula = Attrition ~ Age + NumCompaniesWorked +
 summary(model_24)
 vif(model_24)
 
+# Removing WorkLifeBalance.xBest due to relatively high VIF and p value to created model_25
+model_25 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + Department.xResearch...Development + Department.xSales + 
+                  MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + JobSatisfaction.xLow + JobSatisfaction.xVery.High + 
+                  WorkLifeBalance.xBetter + WorkLifeBalance.xGood , family = "binomial", data = train)
 
+summary(model_25)
+vif(model_25)
 
-#Can't remove BusinessTravel.xTravel_Frequently or BusinessTravel.xTravel_Rarely even though it has 
-#high VIF value since they both have very high negative corelation -0.753091732
+# Removing WorkLifeBalance.xGood due to relatively high p value to create model_26
+
+model_26 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + Department.xResearch...Development + Department.xSales + 
+                  MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + JobSatisfaction.xLow + JobSatisfaction.xVery.High + 
+                  WorkLifeBalance.xBetter , family = "binomial", data = train)
+
+summary(model_26)
+vif(model_26)
+
+# Removing WorkLifeBalance.xBetter as it has relatively high p value to create model_27
+model_27 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + Department.xResearch...Development + Department.xSales + 
+                  MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + JobSatisfaction.xLow + JobSatisfaction.xVery.High , family = "binomial", data = train)
+
+summary(model_27)
+vif(model_27)
+
+# Removing Department.xSales due to relatively high vif to get model_28
+model_28 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + Department.xResearch...Development +  
+                  MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + JobSatisfaction.xLow + JobSatisfaction.xVery.High , family = "binomial", data = train)
+
+summary(model_28)
+vif(model_28)
+
+# Removing Department.xResearch...Development due to high p value to get model_29
+model_29 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + JobSatisfaction.xLow + JobSatisfaction.xVery.High , family = "binomial", data = train)
+
+summary(model_29)
+vif(model_29)
+
+# Removing the TotalWorkingYears due to relatively high vif
+model_30 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  TrainingTimesLastYear + YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + JobSatisfaction.xLow + JobSatisfaction.xVery.High , family = "binomial", data = train)
+
+summary(model_30)
+vif(model_30)
+
+# Removing TrainingTimesLastYear due to relative high p values and to bring variable count to 10 in model_31
+model_31 <- glm(formula = Attrition ~ Age + NumCompaniesWorked + 
+                  YearsSinceLastPromotion + 
+                  YearsWithCurrManager + Total_days_worked + 
+                  BusinessTravel.xTravel_Frequently + MaritalStatus.xSingle + 
+                  EnvironmentSatisfaction.xLow + JobSatisfaction.xLow + JobSatisfaction.xVery.High , family = "binomial", data = train)
+
+summary(model_31)
+vif(model_31)
+
+# Cannot remove variables further as the p values and the VIF values are very low
+# and the model variables have reduced down to 10.
 
 ########################################################################
-# With 15 significant variables in the model
+# With 10 significant variables in the model
 
-final_model<- model_20
+final_model<- model_31
 
 #######################################################################
 
