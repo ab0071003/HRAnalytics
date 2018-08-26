@@ -39,6 +39,8 @@ library(cowplot)
 library(caTools)
 library(GGally)
 library(gridExtra)
+library(ROCR)
+library(dplyr)
 #Setting Working Directory
 
 #setwd("D:/upgrad/HR Analytics Case Study")
@@ -1008,41 +1010,109 @@ final_model<- model_31
 
 #predicted probabilities of Churn 1 for test data
 
-test_pred = predict(final_model, type = "response", 
-                    newdata = test[,-1])
-#if type='response' is noy used the output will be in log odds. since we need output in probability we are using this
+test_pred = predict(final_model, type = "response", newdata = test[,-1])
+#if type='response' is not used the output will be in log odds. since we need output in probability we are using this
 
-# Let's see the summary 
-
+#Let's observe the summary of the forcasted probabilities of the test dataset 
 summary(test_pred)
 
-test$prob <- test_pred
-View(test)
-# Let's use the probability cutoff of 50%.
-
-test_pred_Attrition <- factor(ifelse(test_pred >= 0.50, "Yes", "No"))
+#From the test dataset we will encode Attrition=1 as Yes and Attrition=0 as No and store the output in test_actual_attrition
+#This test_actual_attrition will be compared with test_cutoff_attrition while evaluating the confusion Matrix
 test_actual_Attrition <- factor(ifelse(test$Attrition==1,"Yes","No"))
 
+#********************** Sensitivity, Specificity and Accuracy Evaluation **********************#
 
-table(test_actual_Attrition,test_pred_Attrition)
+#We have to determine what cutoff probability is to be used to encode the outcome of test_predict as Yes or No.
+#We will decide this cutof value based on the optimal accuracy, sensitivity and specificty value using the parameter_optimization function.
 
+parameter_optimization <- function(cutoff) 
+{
+  predicted_attrition <- factor(ifelse(test_pred >= cutoff, "Yes", "No"))
+  conf_mat <- confusionMatrix(predicted_attrition, test_actual_Attrition, positive = "Yes")
+  accuracy_val <- conf_mat$overall[1]
+  sensitivity_val <- conf_mat$byClass[1]
+  specificity_val <- conf_mat$byClass[2]
+  output <- t(as.matrix(c(sensitivity_val, specificity_val, accuracy_val))) 
+  colnames(output) <- c("Sensitivity", "Specificity", "Accuracy")
+  return(output)
+}
 
-#######################################################################
+#We will create a sequence of 200 cutoff values between 0.01 and 0.80 to be sent as an input to the parameter_optimization function.
+cutoff_vector = seq(.01,.80,length=200)
+#We have created eval_matrix to store the sensitivity, specificity and accuracy values of each of the 200 input cutoff_vector values from the parameter_optimization function.
+eval_mat = matrix(0,200,3)
 
-test_pred_Attrition <- factor(ifelse(test_pred >= 0.35, "Yes", "No"))
+#Evaluating the sensitivity, specificity and accuracy parameters for each test case.
+for(sb in 1:200)
+{
+  eval_mat[sb,] = parameter_optimization(cutoff_vector[sb])
+} 
 
-install.packages("e1071")
-library(e1071)
-install.packages("RcppRoll")
-install.packages("ddalpha")
-install.packages("DEoptimR")
-install.packages("dimRed")
-install.packages("gower")
-install.packages("caret",
-                 repos = "http://cran.r-project.org", 
-                 dependencies = c("Depends", "Imports", "Suggests"))
-library(caret)
-test_conf <- confusionMatrix(test_actual_Attrition,test_pred_Attrition, positive = "Yes")
-test_conf
-#######################################################################
+#Plotting the parameter_values for each cutoff value to determine the optimal cutoff value.
+plot(cutoff_vector, eval_mat[,1],xlab="Cutoff_Value",ylab="Parameter_Value",cex.lab=1.5,cex.axis=1.5,ylim=c(0,1),type="l",lwd=2,axes=FALSE,col=2)
+axis(1,seq(0,1,length=5),seq(0,1,length=5),cex.lab=1.5)
+axis(2,seq(0,1,length=5),seq(0,1,length=5),cex.lab=1.5)
+lines(cutoff_vector,eval_mat[,2],col="darkgreen",lwd=2)
+lines(cutoff_vector,eval_mat[,3],col=4,lwd=2)
+title(main = "Optimization Parameters")
+box()
+legend(0,.50,col=c(2,"darkgreen",4,"darkred"),lwd=c(2,2,2,2),c("Sensitivity","Specificity","Accuracy"))
 
+#The optimal cutoff value will be the cutoff value for which the difference between Sensitivity and Specificity is minimum.
+opt_cutoff <- cutoff_vector[which(abs(eval_mat[,1]-eval_mat[,2])<0.01)]
+
+#Computing the Attrition status of the predicted test_predict vector by using the optimal cutoff value[opt_cutoff]
+test_cutoff_attrition <- factor(ifelse(test_pred >= opt_cutoff, "Yes", "No"))
+conf_final <- confusionMatrix(test_cutoff_attrition, test_actual_Attrition, positive = "Yes")
+opt_accuracy <- conf_final$overall[1]
+opt_sensitivity <- conf_final$byClass[1]
+opt_specificity <- conf_final$byClass[2]
+table(test_cutoff_attrition,test_actual_Attrition)
+#Storing the optimum parameters in a dataframe optimum_parameters
+optimum_parameters<-data.frame(opt_accuracy, opt_sensitivity, opt_specificity, opt_cutoff, row.names = "[final_model]")
+optimum_parameters
+
+# Final Model's optimum parameters opt_accuracy=0.7573696 | opt_sensitivity=0.7511737 | opt_specificity=0.7585586 | opt_cutoff=0.1648241
+
+#********************** Computing KS Statistic for Test Data **********************#
+#Preparing the test_cutoff_attrition and test_actual_attrition for computing the KS Statistic Value
+test_cutoff_attr_KS <- ifelse(test_cutoff_attrition=="Yes",1,0)
+test_actual_attr_KS <- ifelse(test_actual_Attrition=="Yes",1,0)
+
+#Predicting values
+pred_object_test<- prediction(test_cutoff_attr_KS, test_actual_attr_KS)
+performance_measures_test<- performance(pred_object_test, "tpr", "fpr")
+
+#Computing the Difference
+ks_table_test <- attr(performance_measures_test, "y.values")[[1]] - (attr(performance_measures_test, "x.values")[[1]])
+
+#KS Statistic Value
+ks_statistic_max<- max(ks_table_test)
+ks_statistic_max
+#With a ks_statistic_max of 0.5097323 which is greater than 0.4[40%] our model is viable and justified.
+
+#********************** Gain and Lift Charts **********************#
+#Converting test_actual_attrition into a format compatible for Gain and Lift Chart Evaluation
+test_actual_attrition <- ifelse(test_actual_Attrition=="Yes",1,0)
+
+#Defining gain_lift_evaluation function to compute gain and lift values for the final model.
+#Cutting the 
+gain_lift_evaluation<- function(labels,predicted_prob,groups=10) 
+{
+  if(is.factor(labels)) labels  <- as.integer(as.character(labels ))
+  if(is.factor(predicted_prob)) predicted_prob <- as.integer(as.character(predicted_prob))
+  
+  helper = data.frame(cbind(labels , predicted_prob))
+  helper[,"bucket"] = ntile(-helper[,"predicted_prob"], groups)
+  gaintable = helper %>% group_by(bucket)  %>% summarise_at(vars(labels ), funs(total = n(),
+                                                                                totalresp=sum(., na.rm = TRUE))) %>% mutate(Cumresp = cumsum(totalresp),
+                                                                                                                            Gain=Cumresp/sum(totalresp)*100, Cumlift=Gain/(bucket*(100/groups))) 
+  
+  return(gaintable)
+}
+
+Attrition_gainlift = gain_lift_evaluation(test_actual_attrition, test_pred, groups = 10)
+Attrition_gainlift
+
+#From the Attrition_gainlift table it is clear that within 40% of the test dataset [or within the 4th decile].
+#This is a good model considering practical implications.
