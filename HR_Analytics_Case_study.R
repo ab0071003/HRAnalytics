@@ -506,10 +506,10 @@ train = HR_data_final[indices,]
 
 test = HR_data_final[!(indices),]
 
-# Removing EmployeeID columns from train & test datasets as it is unique and is similar to row number.
+# Removing EmployeeID columns from train datasets as it is unique and is similar to row number.
 
 train <- train[-1]
-test <- test[-1]
+
 ########################################################################
 # Logistic Regression: 
 
@@ -1029,7 +1029,7 @@ table(test_actual_Attrition,test_pred_Attrition)
 
 #######################################################################
 
-test_pred_Attrition <- factor(ifelse(test_pred >= 0.40, "Yes", "No"))
+test_pred_Attrition <- factor(ifelse(test_pred >= 0.35, "Yes", "No"))
 
 install.packages("e1071")
 library(e1071)
