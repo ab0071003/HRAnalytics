@@ -215,6 +215,7 @@ nas_WrkBal <- which(is.na(employee_survey$WorkLifeBalance))
 intersect(nas_EnvSatisfy,nas_JobSatisfy)
 intersect(nas_EnvSatisfy,nas_WrkBal)
 intersect(nas_JobSatisfy,nas_WrkBal)
+#Replacing the NAs with the mean of the other two values present
 
 len <- length(nas_EnvSatisfy)
 
@@ -337,6 +338,7 @@ sum(is.null(HR_data)) # Verified that the data contains no null values
 # PerformanceRating,RelationshipSatisfaction,WorkLifeBalance,JobSatisfaction, JobInvolvement, EnvironmentSatisfaction
 # Education need to be changed from integer to categorical
 
+ggplot(HR_data,aes(x=Attrition)) + geom_bar(position = "dodge") + xlab("Attrition") + ylab("Count") + ggtitle("Attrition Summary") + geom_text(stat='count', aes(label=..count..), vjust=-1) + theme_economist()
 # Barcharts for categorical features with stacked attrition information
 
 p1 <- ggplot(HR_data, aes(x=BusinessTravel,fill=Attrition))+ geom_bar() + xlab("Business Travel")+ylab("Count") + ggtitle("Attrition & Business Travel")+theme(plot.title = element_text(hjust = 0.5)) + labs(fill="Attrition") + geom_text(stat='count', aes(label=..count..), vjust=-1) + theme_economist()
@@ -496,7 +498,7 @@ dummies<- data.frame(sapply(Hr_data_chr,
 # Final dataset
 HR_data_final<- cbind(HR_data[,-c(4,5,7,8,10,11,12,16,22,23,24,25,26)],dummies) 
 View(HR_data_final) #4410 obs. of  59 variables
-write.csv(HR_data_final,"HR_data_final.csv")
+#write.csv(HR_data_final,"HR_data_final.csv")
 
 ########################################################################
 # splitting the data between train and test
@@ -517,7 +519,7 @@ train <- train[-1]
 
 #Getting the corelation matrix for reference
 Corelation <- cor(HR_data_final)
-write.csv(Corelation,"Corelation_matrix.csv")
+#write.csv(Corelation,"Corelation_matrix.csv")
 
 #Initial model
 model_1 = glm(Attrition ~ ., data = train, family = "binomial")
@@ -1096,7 +1098,7 @@ ks_statistic_max
 test_actual_attrition <- ifelse(test_actual_Attrition=="Yes",1,0)
 
 #Defining gain_lift_evaluation function to compute gain and lift values for the final model.
-#Cutting the 
+
 gain_lift_evaluation<- function(labels,predicted_prob,groups=10) 
 {
   if(is.factor(labels)) labels  <- as.integer(as.character(labels ))
